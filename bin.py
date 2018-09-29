@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import random, sys
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a05e08fbc2d904a43692e593a0f04431'  # to be kept secret
-app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///site.db'   # to tell the program that a file named site.db exists on the relative path
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'   # to tell the program that a file named site.db exists on the relative path
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -44,13 +44,14 @@ def register():
 
     return jsonify({'otp': random.randint(1000, 9999)})
 ########################
+@app.route('/checkimei', methods = ['POST'])
 def check_imei():
     input_imei=int(request.json['input_imei'])
-    results = db_session.query(User).filter(User.imei.contains(input_imei)) 
-    if not results:
-        return jsonify(False)
-    else:
+    results = User.query.filter_by(imei=input_imei).first() 
+    if results.imei == input_imei:
         return jsonify(True)
+    else:
+        return jsonify(False)
 ########################3
 if __name__ == '__main__':
     app.run(debug = True)
