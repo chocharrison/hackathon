@@ -47,8 +47,8 @@ def register():
 @app.route('/checkimei', methods = ['POST'])
 def check_imei():
     input_imei=int(request.json['input_imei'])
-    results = User.query.filter_by(imei=input_imei).first() 
-    if results.imei == input_imei:
+    results = User.query.filter_by(imei=input_imei).first()
+    if hasattr(results, 'imei'):
         return jsonify(True)
     else:
         return jsonify(False)
