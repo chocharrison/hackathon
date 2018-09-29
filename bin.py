@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 
 app.config['SECRET_KEY'] = 'a05e08fbc2d904a43692e593a0f04431'
-app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///site.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:////site.db'
 db = SQLAlchemy(app)
 
 class User(db.Model):
