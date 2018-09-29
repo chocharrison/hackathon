@@ -7,6 +7,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = r'sqlite:///site.db'   # to tell the pro
 db = SQLAlchemy(app)
 
 class User(db.Model):
+    __tablename__ = 'user'
     name = db.Column(db.String(30), nullable = False)
     contact = db.Column(db.Integer(), nullable = False)
     address = db.Column(db.Text, nullable = False)
@@ -32,10 +33,10 @@ except:
 @app.route('/register', methods = ['POST'])
 def register():
     name = request.json['name']
-    contact = request.json['contact']
+    contact = int(request.json['contact'])
     address = request.json['address']
     interests = request.json['interests']
-    imei = request.json['imei']
+    imei = int(request.json['imei'])
     profile_image = request.json['profile_image']
     new_user = User(name=name, contact=contact, address=address, interests=interests, imei=imei, profile_image=profile_image)
     db.session.add(new_user)
@@ -44,12 +45,12 @@ def register():
     return jsonify({'otp': random.randint(1000, 9999)})
 ########################
 def check_imei():
-    input_imei=request.json['input_imei']
-    if(User.query.filter_by(imei=input_imei)==input_imei):
-            return jsonify({True})
+    input_imei=int(request.json['input_imei'])
+    results = db_session.query(User).filter(User.imei.contains(input_imei)) 
+    if not results:
+        return jsonify(False)
     else:
-            return jsonify({False})
-    
+        return jsonify(True)
 ########################3
 if __name__ == '__main__':
     app.run(debug = True)
