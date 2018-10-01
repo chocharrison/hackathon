@@ -1,10 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-import random, sys
+import random, sys,json
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects.postgresql import ARRAY
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a05e08fbc2d904a43692e593a0f04431'  # to be kept secret
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'   # to tell the program that a file named site.db exists on the relative path
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///acc.db'   # to tell the program that a file named site.db exists on the relative path
 db = SQLAlchemy(app)
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -14,7 +17,7 @@ class User(db.Model):
     interests = db.Column(db.Text, nullable = True)
     imei = db.Column(db.Integer(), unique = True, nullable = False, primary_key = True)
     profile_image = db.Column(db.String(200), nullable = True)
-
+    questionanswer = db.Column(db.Text, nullable=False)
     def __repr__(self):
         return self.name
 
@@ -38,7 +41,14 @@ def register():
     interests = request.json['interests']
     imei = int(request.json['imei'])
     profile_image = request.json['profile_image']
-    new_user = User(name=name, contact=contact, address=address, interests=interests, imei=imei, profile_image=profile_image)
+    questionanswer = request.json['questionanswer']
+    string = ''
+    for item in range(len(questionanswer)):
+        if string == '':
+            string += questionanswer[item]["key"] + ' , ' + questionanswer[item]["value"]
+        else:
+            string += ' , ' + questionanswer[item]["key"] + ' , ' + questionanswer[item]["value"]
+    new_user = User(name=name, contact=contact, address=address, interests=interests, imei=imei, profile_image=profile_image,questionanswer=string)
     db.session.add(new_user)
     db.session.commit()
 
@@ -49,9 +59,38 @@ def check_imei():
     input_imei=int(request.json['input_imei'])
     results = User.query.filter_by(imei=input_imei).first()
     if hasattr(results, 'imei'):
+        print(results.imei)
         return jsonify(True)
     else:
         return jsonify(False)
+    
+    
+    
+@app.route('/sendquestions', methods = ['POST'])
+def sendquestions():
+    input_imei=int(request.json['input_imei'])
+    results = User.query.filter_by(imei=input_imei).first()
+    if hasattr(results, 'imei'): 
+        string = results.questionanswer
+        split_string = string.split(',')
+        queList = []
+        i = 1
+        while i <= 20:
+            question = split_string[i-1]
+            answer = split_string[i]
+            queDict = {
+                "Question": question,
+                "Answer": answer}
+            queList.append(queDict)
+            i=i+2;
+    
+         #convert to json data
+        jsonStr = json.dumps(queList)
+        print(jsonStr)
+        return jsonify(jsonStr)
+    else:
+        return jsonify(False)
+    
 ########################3
 if __name__ == '__main__':
     app.run(debug = True)
